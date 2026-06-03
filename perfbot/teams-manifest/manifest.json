@@ -1,0 +1,47 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "0.1.0",
+  "id": "{{MICROSOFT_APP_ID}}",
+  "developer": {
+    "name": "Perf Alchemists",
+    "websiteUrl": "https://conga.com",
+    "privacyUrl": "https://conga.com/privacy",
+    "termsOfUseUrl": "https://conga.com/terms"
+  },
+  "name": {
+    "short": "PerfBot",
+    "full": "PerfBot - AI Performance Insights"
+  },
+  "description": {
+    "short": "AI-powered K6 performance test insights",
+    "full": "Ask natural-language questions about K6 performance test results. Get instant summaries, comparisons, regressions, and Grafana links — all within Teams."
+  },
+  "icons": {
+    "outline": "icon-outline.png",
+    "color": "icon-color.png"
+  },
+  "accentColor": "#4A90D9",
+  "bots": [
+    {
+      "botId": "{{MICROSOFT_APP_ID}}",
+      "scopes": ["personal", "team", "groupChat"],
+      "supportsFiles": false,
+      "isNotificationOnly": false,
+      "commandLists": [
+        {
+          "scopes": ["personal", "team"],
+          "commands": [
+            {"title": "status", "description": "Get latest run status for a service"},
+            {"title": "compare", "description": "Compare two builds"},
+            {"title": "regressions", "description": "Show regressed endpoints"},
+            {"title": "running", "description": "Check active test runs"},
+            {"title": "grafana", "description": "Get Grafana dashboard link"}
+          ]
+        }
+      ]
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["perfbot.congacloud.io"]
+}

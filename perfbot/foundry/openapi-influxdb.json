@@ -1,0 +1,78 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "PerfBot InfluxDB Functions",
+    "description": "Functions for querying K6 performance metrics from InfluxDB",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://20.252.97.68:80",
+      "description": "InfluxDB v2 server"
+    }
+  ],
+  "paths": {
+    "/api/v2/query": {
+      "post": {
+        "operationId": "get_latest_build_ids",
+        "summary": "Get the N most recent build IDs (testId) for a service",
+        "description": "Returns the latest testId values for a given testName, sorted by time descending. Use this first to find which builds exist before querying metrics.",
+        "parameters": [
+          {
+            "name": "org",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "performance"
+            },
+            "description": "InfluxDB organization (always 'performance')"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/vnd.flux": {
+              "schema": {
+                "type": "string"
+              },
+              "examples": {
+                "get_builds": {
+                  "summary": "Get latest 2 build IDs for platform-objectdb-api",
+                  "value": "from(bucket: \"k6\")\n  |> range(start: -30d)\n  |> filter(fn: (r) => r[\"testName\"] == \"platform-objectdb-api\")\n  |> filter(fn: (r) => r[\"_measurement\"] == \"http_req_duration\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> keep(columns: [\"_time\", \"testId\"])\n  |> group(columns: [\"testId\"])\n  |> last(column: \"_time\")\n  |> group()\n  |> sort(columns: [\"_time\"], desc: true)\n  |> limit(n: 2)"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "CSV response with query results",
+            "content": {
+              "application/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "influxToken": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "influxToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "InfluxDB token. Format: 'Token <your-token>'"
+      }
+    }
+  }
+}
