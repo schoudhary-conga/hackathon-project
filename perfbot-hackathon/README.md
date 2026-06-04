@@ -81,7 +81,7 @@ Foundry agents cannot reach private/internal IPs directly. The Azure Function br
 ```
 perfbot-hackathon/
 ├── README.md                       # This file
-├── generate_pptx.py                # PowerPoint deck generator (python-pptx)
+├── .gitignore                      # Git ignore rules
 ├── azure-function/
 │   ├── function_app.py             # Azure Function proxy (3 endpoints: query, pods, trace)
 │   ├── cached_pods.json            # Fallback pod snapshot (Cloudflare bypass)
@@ -101,10 +101,12 @@ perfbot-hackathon/
 │   ├── .env.example                # Environment template
 │   └── README.md                   # SDK usage instructions
 ├── docs/
-│   └── architecture.md             # Detailed architecture with Mermaid diagram
+│   ├── architecture.md             # Detailed architecture with Mermaid diagram
+│   └── setup-guide.md              # Step-by-step Foundry setup instructions
 └── demo/
     ├── PerfBot-Hackathon-Deck.pptx # Presentation deck
-    └── conga_logo.png              # Conga branding asset
+    ├── demo-script.md              # Demo walkthrough script
+    └── powerpoint-outline.md       # Slide outline reference
 ```
 
 ---
@@ -161,11 +163,13 @@ func start   # or deploy to Azure
 # - In Foundry: Publish → Teams and Microsoft 365 Copilot
 ```
 
-See [docs/architecture.md](docs/architecture.md) for detailed architecture.
+See [docs/setup-guide.md](docs/setup-guide.md) for detailed setup steps.
 
 ---
 
 ## Demo
+
+See [demo/demo-script.md](demo/demo-script.md) for the 2-minute demo walkthrough.
 
 **Example interaction:**
 ```
