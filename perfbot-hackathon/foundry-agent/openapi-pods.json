@@ -1,0 +1,111 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "K6 Pod Status API",
+    "version": "1.0.0",
+    "description": "Fetch Kubernetes pod status for performance test services via Rancher proxy"
+  },
+  "servers": [
+    {
+      "url": "https://perfbot-influxdb-proxy-gxekcaa5chdwheaf.eastus2-01.azurewebsites.net"
+    }
+  ],
+  "paths": {
+    "/api/pods": {
+      "post": {
+        "operationId": "get_pod_status",
+        "summary": "Get pod status for a service in the performance cluster",
+        "description": "Fetch live pod status from Kubernetes via Rancher. Optionally filter by service name. Returns pod phase (Running/Pending/Failed), restart counts, container readiness, node, and creation time.",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "service": {
+                    "type": "string",
+                    "description": "Service name to filter pods (e.g., 'platform-objectdb-api', 'contract-api'). Leave empty to list all pods in the namespace."
+                  },
+                  "namespace": {
+                    "type": "string",
+                    "description": "Kubernetes namespace. Default: rls-app",
+                    "default": "rls-app"
+                  },
+                  "cluster": {
+                    "type": "string",
+                    "description": "Cluster name filter. Default: usw2-app-eks-perf-csg1-site01-rls07",
+                    "default": "usw2-app-eks-perf-csg1-site01-rls07"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pod status response with summary and individual pod details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "cluster": {
+                      "type": "string"
+                    },
+                    "namespace": {
+                      "type": "string"
+                    },
+                    "service_filter": {
+                      "type": "string"
+                    },
+                    "total_pods": {
+                      "type": "integer"
+                    },
+                    "summary": {
+                      "type": "object",
+                      "description": "Pod count by phase (running, pending, failed, etc.)"
+                    },
+                    "pods": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": { "type": "string" },
+                          "phase": { "type": "string" },
+                          "restart_count": { "type": "integer" },
+                          "containers_ready": { "type": "string" },
+                          "node": { "type": "string" },
+                          "pod_ip": { "type": "string" },
+                          "images": { "type": "array", "items": { "type": "string" } },
+                          "created": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-custom"
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "InfluxDB K6 Metrics",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://perfbot-influxdb-proxy-gxekcaa5chdwheaf.eastus2-01.azurewebsites.net"
+    }
+  ],
+  "paths": {
+    "/api/query": {
+      "post": {
+        "operationId": "query_influxdb",
+        "summary": "Execute a Flux query against the K6 metrics bucket",
+        "description": "Send a Flux query to retrieve K6 performance test metrics. Always use bucket k6, org performance. Use toFloat() before aggregations.",
+        "security": [
+          {
+            "apiKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["query"],
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "The Flux query string. Always start with: from(bucket: \"k6\") |> range(start: -30d)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "CSV rows with query results",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-custom"
+      }
+    }
+  }
+}

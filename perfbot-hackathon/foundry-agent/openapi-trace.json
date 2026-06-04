@@ -1,0 +1,119 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "K6 Trace Lookup API",
+    "version": "1.0.0",
+    "description": "Fetch distributed traces from Grafana Tempo by trace ID for root cause analysis of slow API requests"
+  },
+  "servers": [
+    {
+      "url": "https://perfbot-influxdb-proxy-gxekcaa5chdwheaf.eastus2-01.azurewebsites.net"
+    }
+  ],
+  "paths": {
+    "/api/trace": {
+      "post": {
+        "operationId": "get_trace",
+        "summary": "Fetch a distributed trace from Tempo by trace ID",
+        "description": "Given a trace ID (obtained from InfluxDB request_duration_api measurement), fetches the full trace from Grafana Tempo and returns a summarized span breakdown showing service name, duration, DB statements, HTTP calls, and the critical path. Use this for root cause analysis of slow requests.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["traceId"],
+                "properties": {
+                  "traceId": {
+                    "type": "string",
+                    "description": "The trace ID (16 or 32 hex chars) to look up in Tempo. Get this from the 'Get Trace IDs for a Transaction' InfluxDB query.",
+                    "pattern": "^[a-fA-F0-9]{16,32}$",
+                    "example": "187b6fb7ca3e6125c2b405263332c5ca"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Trace summary with span breakdown",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "trace_id": {
+                      "type": "string",
+                      "description": "The queried trace ID"
+                    },
+                    "total_spans": {
+                      "type": "integer",
+                      "description": "Total number of spans in the trace"
+                    },
+                    "total_duration_ms": {
+                      "type": "number",
+                      "description": "Duration of the longest (root) span in milliseconds"
+                    },
+                    "tempo_link": {
+                      "type": "string",
+                      "description": "Direct link to view this trace in Grafana Tempo explore"
+                    },
+                    "spans": {
+                      "type": "array",
+                      "description": "Top 30 spans sorted by duration (longest first)",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "service": {
+                            "type": "string",
+                            "description": "Service that emitted this span"
+                          },
+                          "name": {
+                            "type": "string",
+                            "description": "Span operation name"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "description": "Span kind: SERVER, CLIENT, INTERNAL, PRODUCER, CONSUMER"
+                          },
+                          "duration_ms": {
+                            "type": "number",
+                            "description": "Span duration in milliseconds"
+                          },
+                          "status": {
+                            "type": "string",
+                            "description": "Span status code"
+                          },
+                          "http_method": {
+                            "type": "string"
+                          },
+                          "http_url": {
+                            "type": "string"
+                          },
+                          "db_statement": {
+                            "type": "string",
+                            "description": "Database statement (truncated to 200 chars) if this is a DB span"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Trace not found (may have expired from Tempo retention)"
+          },
+          "400": {
+            "description": "Invalid trace ID format"
+          }
+        }
+      }
+    }
+  }
+}
