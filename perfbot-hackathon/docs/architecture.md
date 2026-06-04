@@ -16,8 +16,10 @@ flowchart TD
 
     subgraph "Azure AI Foundry"
         D[PerfBot Agent<br/>Model: gpt-4o<br/>Version 35]
-        E[Instructions<br/>231 lines: Flux templates,<br/>SLA rules, service mappings]
-        F[OpenAPI Tool<br/>query_influxdb]
+        E[Instructions<br/>349 lines: Flux templates,<br/>SLA rules, service mappings]
+        F1[OpenAPI Tool<br/>query_influxdb]
+        F2[OpenAPI Tool<br/>get_pods]
+        F3[OpenAPI Tool<br/>get_trace]
     end
 
     subgraph "Azure Function App"
@@ -27,7 +29,8 @@ flowchart TD
 
     subgraph "Infrastructure"
         J[(InfluxDB v2<br/>Org: performance<br/>Bucket: k6)]
-        K[Grafana Dashboards]
+        K[Kubernetes<br/>Pod Health]
+        L2[Grafana Tempo<br/>Distributed Traces]
     end
 
     subgraph "Channels"
@@ -41,13 +44,20 @@ flowchart TD
     L -->|Activity Protocol| D
     M -->|Activity Protocol| D
     D --> E
-    D -->|Calls tool| F
-    F -->|POST /api/query| H
+    D -->|Calls tool| F1
+    D -->|Calls tool| F2
+    D -->|Calls tool| F3
+    F1 -->|POST /api/query| H
+    F2 -->|GET /api/pods| H
+    F3 -->|GET /api/trace| H
     H --> I
     I -->|POST /api/v2/query<br/>Token auth| J
+    H -->|Rancher API + cached fallback| K
+    H -->|GET /api/traces/:traceId| L2
     J -->|CSV response| H
-    H -->|CSV| F
-    F -->|Parsed data| D
+    K -->|JSON pod list| H
+    L2 -->|Trace spans| H
+    H -->|Data| D
     D -->|Natural language answer| A
 ```
 
@@ -55,11 +65,11 @@ flowchart TD
 
 | # | Component | Technology | Purpose |
 |---|-----------|-----------|---------|
-| 1 | AI Agent | Azure AI Foundry (GPT-4o v30) | Intent parsing, Flux query generation, response narration |
-| 2 | System Prompt | instructions.txt (231 lines) | Service mappings, SLA rules, Flux templates, response behavior |
-| 3 | OpenAPI Tool | openapi-influxdb.json | Declares `query_influxdb` function for the agent to call |
-| 4 | Function Proxy | Azure Function (Python 3.13) | Bridges Foundry → InfluxDB, auto-injects toFloat() |
-| 5 | Data Store | InfluxDB v2 | K6 performance metrics (http_req_duration, http_reqs, etc.) |
+| 1 | AI Agent | Azure AI Foundry (GPT-4o v35) | Intent parsing, Flux query generation, response narration |
+| 2 | System Prompt | instructions.txt (349 lines) | Service mappings, SLA rules, Flux templates, response behavior |
+| 3 | OpenAPI Tools | openapi-influxdb.json, openapi-pods.json, openapi-trace.json | Declares 3 functions: query_influxdb, get_pods, get_trace |
+| 4 | Function Proxy | Azure Function (Python 3.13) | Bridges Foundry → InfluxDB/Kubernetes/Tempo, auto-injects toFloat() |
+| 5 | Data Stores | InfluxDB v2, Kubernetes, Grafana Tempo | Metrics, pod health, distributed traces |
 | 6 | Bot Service | Azure Bot (perfbot53601) | Routes Teams/Web Chat messages to Foundry agent |
 
 ## Data Flow (Step by Step)
@@ -83,9 +93,12 @@ flowchart TD
 | Azure Function proxy | Foundry can't reach private IPs; Function bridges the gap |
 | Anonymous auth on Function | Simplifies Foundry connection; acceptable for internal tool |
 | Auto-inject `toFloat()` | InfluxDB stores values as strings; model sometimes forgets the cast |
+| 3 separate OpenAPI tools | Keeps each tool focused; easier for the agent to select the right one |
+| Cloudflare fallback for pods | Rancher behind Cloudflare often blocks; cached_pods.json as backup |
+| Trace ID validation | Strict hex regex (16–32 chars) prevents invalid Tempo calls |
 | GPT-4o over GPT-5 | More reliable tool-calling behavior for structured queries |
 | CSV response format | InfluxDB native output; lighter than JSON for large result sets |
-| 231-line system prompt | Encodes all domain knowledge so the agent never asks the user for technical details |
+| 349-line system prompt | Encodes all domain knowledge so the agent never asks the user for technical details |
 
 ## Azure Resources
 

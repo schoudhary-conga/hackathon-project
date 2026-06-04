@@ -31,16 +31,20 @@ Or deploy via VS Code Azure Functions extension.
 **Environment variables to set in Azure Function App Settings:**
 - `INFLUXDB_URL`: `http://20.252.97.68:80`
 - `INFLUXDB_TOKEN`: Your InfluxDB read token
+- `RANCHER_BEARER_TOKEN`: Rancher API token for pod queries
+- `TEMPO_API_KEY`: Grafana session cookie for Tempo trace API
 
-## Step 4: Add OpenAPI Tool to Agent
+## Step 4: Add OpenAPI Tools to Agent
 
 1. In the agent → **Tools** → **Add** → **OpenAPI**
-2. Upload `foundry-agent/openapi-influxdb.json`
-3. Create a **Connection**:
+2. Upload `foundry-agent/openapi-influxdb.json` (InfluxDB metrics query)
+3. Upload `foundry-agent/openapi-pods.json` (Kubernetes pod health)
+4. Upload `foundry-agent/openapi-trace.json` (Grafana Tempo trace spans)
+5. For each tool, create a **Connection**:
    - Auth type: API Key
    - Header name: `x-custom`
-   - Value: any dummy value (Function ignores it)
-4. Server URL should already be: `https://perfbot-influxdb-proxy-gxekcaa5chdwheaf.eastus2-01.azurewebsites.net`
+   - Value: any dummy value (Function handles auth internally)
+6. Server URL should already be: `https://perfbot-influxdb-proxy-gxekcaa5chdwheaf.eastus2-01.azurewebsites.net`
 
 ## Step 5: Test in Playground
 
